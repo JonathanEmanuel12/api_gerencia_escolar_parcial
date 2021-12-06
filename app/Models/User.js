@@ -29,6 +29,15 @@ class User extends Model {
       return super.dates.concat(['data_nascimento'])
   }
 
+  rooms () {
+      return this
+      .belongsToMany('App/Models/Room')
+  }
+
+  room () {
+      return this.hasOne('App/Models/Room')
+  }
+
   /**
    * A relationship on tokens is required for auth to
    * work. Since features like `refreshTokens` or
