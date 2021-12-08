@@ -48,3 +48,5 @@ Se for professor poderá acessar todas as rotas com exceção da buscarAlunoSala
 
 * alocarAluno - Post / = alocar (adicionar) aluno numa sala
 * desalocarAluno - Delete = desalocar (retirar) aluno de uma sala
+
+*OBS: Os formatos dos dados armazenados podem ser vistos na pasta database/migrations e a forma de enviar os dados para a API é demonstrada pelo arquivo a ser importado pelo Insomnia*
