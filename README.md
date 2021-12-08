@@ -24,3 +24,28 @@ Api que possibilita o gerenciamento de alunos, professores e salas
 Se for professor poderá acessar todas as rotas com exceção da buscarAlunoSalas.*
 
 11. Para acessar as outras rotas deve-se copiar o token JWT recebido e colar no campo "token" da aba "Bearer" da rota desejada
+
+
+### Rotas 
+
+**api/user**
+
+* salvarUsuario - Post / = cadastrar novo usuário
+* autenticarUsuario - Post /login = autenticar usuário e receber token JWT
+* buscarUsuario - Get /:matricula = buscar usuário pela matrícula
+* editarUsuario - Put /:matricula = editar uma ou mais informações do usuário
+* deletarUsuario - Delete /:matricula = deletar usuário
+* buscarAlunoSalas - Get /:matricula_aluno/salas = buscar salas (nome do professor e número da sala) em que o aluno está alocado
+
+**api/room**
+
+* salvarSala - Post / = cadastrar nova sala
+* consultarSala - Get /:numero_sala = buscar sala pelo número da sala
+* editarSala - Put /:numero_sala = editar uma ou mais informações da sala
+* deletarSala - Delete /:numero_sala = deletar sala
+* buscarSalaAlunos - Get /:numero_sala/alunos = busca todos os alunos alocados em determinada sala
+
+**api/locacao**
+
+*
+*
