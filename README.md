@@ -25,7 +25,6 @@ Se for professor poderá acessar todas as rotas com exceção da buscarAlunoSala
 
 11. Para acessar as outras rotas deve-se copiar o token JWT recebido e colar no campo "token" da aba "Bearer" da rota desejada
 
-
 ### Rotas 
 
 **api/user**
@@ -47,5 +46,5 @@ Se for professor poderá acessar todas as rotas com exceção da buscarAlunoSala
 
 **api/locacao**
 
-*
-*
+* alocarAluno - Post / = alocar (adicionar) aluno numa sala
+* desalocarAluno - Delete = desalocar (retirar) aluno de uma sala
