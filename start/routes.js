@@ -23,7 +23,7 @@ Route.group(() => {
     Route.post('/', 'UserController.cadastrarUsuario')
     Route.put('/:matricula', 'UserController.editarUsuario').middleware(['auth'])
     Route.delete('/:matricula', 'UserController.deletarUsuario').middleware(['auth'])
-    Route.get('/:matricula_aluno/:numero_sala', 'UserController.buscarSalas').middleware(['auth'])
+    Route.get('/:matricula_aluno/salas', 'UserController.buscarSalas').middleware(['auth'])
 
 }).prefix('api/user')
 
@@ -32,6 +32,7 @@ Route.group(() => {
     Route.post('/', 'RoomController.cadastrarSala').middleware(['auth'])
     Route.put('/:numero_sala', 'RoomController.editarSala').middleware(['auth'])
     Route.delete('/:numero_sala', 'RoomController.deletarSala').middleware(['auth'])
+    Route.get('/:numero_sala/alunos', 'UserController.buscarAlunosPorSala').middleware(['auth'])
     
 }).prefix('api/room')
 

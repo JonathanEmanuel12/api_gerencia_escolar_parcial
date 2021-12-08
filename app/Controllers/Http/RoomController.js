@@ -5,10 +5,7 @@ class RoomController {
     Room = use('App/Models/Room')
 
     async buscarSala ({ params, auth }) {
-        const room = await this.Room
-        .query()
-        .where('numero_sala', '=', params.numero_sala)
-        .fetch()
+        const room = await this.Room.findBy('numero_sala', params.numero_sala)
         try {
             this.verificarUsuario(auth.user)
             return room
@@ -23,7 +20,7 @@ class RoomController {
     async cadastrarSala ({ request, auth}) {
         const { numero_sala, capacidade_alunos, disponibilidade } = request.post()
         const room = new this.Room()
-
+        console.log(auth.user)
         this.verificarUsuario(auth.user)
     
         room.numero_sala = numero_sala
@@ -42,28 +39,46 @@ class RoomController {
 
     async editarSala ({ params, request, auth }) {
         const { capacidade_alunos, disponibilidade } = request.post()
-        const room = await this.Room.findBy('numero_sala', params.numero_sala)
 
-        console.log(room.capacidade_alunos)
+        try {
+            const room = await this.Room.findBy('numero_sala', params.numero_sala)
 
-        this.verificarUsuario(auth.user)
+            this.verificarProfessor(room, auth.user)
 
-        if(capacidade_alunos) { room.capacidade_alunos = capacidade_alunos }
-        if(disponibilidade) { room.disponibilidade = disponibilidade }
+            if(capacidade_alunos) { room.capacidade_alunos = capacidade_alunos }
+            if(disponibilidade) { room.disponibilidade = disponibilidade }
 
-        return await room.save()
+            return await room.save()
+        }
+        catch(error) {
+            return { mensagem: error.message }
+        }
+        
     }
 
     async deletarSala ({ params, auth }) {
-        const room = await this.Room.findBy('numero_sala', params.numero_sala)
         
-        this.verificarUsuario(auth.user)
+        try {
+            const room = await this.Room.findBy('numero_sala', params.numero_sala)
+        
+            this.verificarProfessor(room, auth.user)
 
-        return await room.delete()
+            return await room.delete()
+        }
+        catch(error) {
+            return { mensagem: error.message }
+        }
+        
     }
 
     verificarUsuario(usuarioAutenticado) {
         if(usuarioAutenticado.isProfessor == false) {
+            throw new Error("Acesso negado")
+        }
+    }
+
+    verificarProfessor(room, professor) {
+        if(room.professor_id != professor.id) {
             throw new Error("Acesso negado")
         }
     }

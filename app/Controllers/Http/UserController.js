@@ -9,7 +9,7 @@ class UserController {
     }
 
     async buscarUsuario ({ params, auth }) {
-        const user = await this.User.find(params.matricula)
+        const user = await this.User.findBy('matricula', params.matricula)
         try {
             this.verificarAutorizacao(user, auth.user)
             return user
@@ -22,10 +22,11 @@ class UserController {
     }
 
     async cadastrarUsuario ({ request }) {
-        const { username, email, password, data_nascimento, isProfessor } = request.post()
+        const { nome, matricula, email, password, data_nascimento, isProfessor } = request.post()
         const user = new this.User()
 
-        user.username = username
+        user.nome = nome
+        user.matricula = matricula
         user.email = email
         user.password = password
         user.data_nascimento = data_nascimento
@@ -41,56 +42,143 @@ class UserController {
     }
 
     async editarUsuario ({ params, request, auth }) {
-        const { username, email, password, data_nascimento } = request.post()
-        const user = await this.User.find(params.matricula)
+        const { nome, matricula, email, password, data_nascimento } = request.post()
 
-        this.verificarAutorizacao(user, auth.user)
+        try {
+            const user = await this.User.findBy('matricula', params.matricula)
 
-        if(username) { user.username = username }
-        if(email) { user.email = email }
-        if(password) { user.password = password }
-        if(data_nascimento) { user.data_nascimento = data_nascimento }
+            this.verificarAutorizacao(user, auth.user)
     
-        return await user.save()
+            if(nome) { user.nome = nome }
+            if(matricula) { user.matricula = matricula }
+            if(email) { user.email = email }
+            if(password) { user.password = password }
+            if(data_nascimento) { user.data_nascimento = data_nascimento }
+        
+            return await user.save()
+        }
+        catch(error) {
+            return { mensagem: error.message }
+        }
+       
     }
 
     async deletarUsuario ({ params, auth }) {
-        const user = await this.User.find(params.matricula)
-        
-        this.verificarAutorizacao(user, auth.user)
 
-        return await user.delete()
+        try {
+            const user = await this.User.findBy('matricula',params.matricula)
+            
+            this.verificarAutorizacao(user, auth.user)
+
+            return await user.delete()
+        }
+        catch(error) {
+            return { mensagem: error.message }
+        }
     }
 
     async buscarSalas ({ params, auth }) {
-        const user = await this.User.find(params.matricula)
+        try{
+            const user = await this.User.findBy('matricula', params.matricula_aluno)
+            this.verificarAutorizacao(user, auth.user)
+            this.isProfessor(user)
 
-        this.verificarAutorizacao(user, auth.user)
+            const salasBanco = await user.rooms().fetch()
+            const salasArray = this.converterParaObjetoSimples(salasBanco)
 
-        return await user.rooms().fetch()
+            let resposta = {
+                nomeAluno: user.nome,
+                arrayProfessorSala: []
+            }
+            for (let index = 0; index < salasArray.length; index++)
+            {
+
+                const professor = await this.User.find(salasArray[index].professor_id)
+                let professorSala = {
+                    nomeProfessor: professor.nome,
+                    numero_sala: salasArray[index].numero_sala
+                }
+
+                resposta.arrayProfessorSala.push(professorSala)
+            }
+            return resposta
+        }
+        catch(error) {
+            return { mensagem: error.message }
+        }
+        
+    }
+
+    async buscarAlunosPorSala({ params, auth }) {
+        const Room = use('App/Models/Room')
+        
+        try {
+            const room = await Room.findBy('numero_sala', params.numero_sala)
+
+            this.verificarProfessorSala(room, auth.user)
+
+            const Database = use('Database')
+            const salas = await Database
+            .table('room_user')
+            .where("room_id", room.id)
+
+            let listaAlunos = []
+            const arraySalaAlunos = this.converterParaObjetoSimples(salas)
+
+            for (let index = 0; index < arraySalaAlunos.length; index++) {
+                const aluno = await this.User.find(arraySalaAlunos[index].user_id)
+                listaAlunos.push(aluno)
+            }
+
+            return listaAlunos
+        }
+        catch(error) {
+            return { mensagem: error.message }
+        }
+        
     }
 
     async alocarAluno ({ request, auth }) {
         const { matricula_aluno, numero_sala } = request.post()
         const Room = use('App/Models/Room')
-        const room = Room.findBy('numero_sala', numero_sala)
 
-        this.verificarProfessorSala(room, auth.user)
+        try{
+            const room = await Room.findBy('numero_sala', numero_sala)
 
-        const user = this.User.find(matricula_aluno)
-        user.rooms().attach([room.id])
+            this.verificarDisponibilidadeSala(room)
+            await this.verificarCapacidadeSala(room)
+            this.verificarProfessorSala(room, auth.user)
+
+            const user = await this.User.findBy('matricula', matricula_aluno)
+
+            this.isProfessor(user)
+            
+            return user.rooms().attach([room.id])
+        }
+        catch(error) {
+            return { mensagem: error.message }
+        }
+        
     }
 
     async desalocarAluno ({ params, auth }) {
         const { matricula_aluno, numero_sala } = params
-        const user = this.User.find(matricula_aluno)
-        const Room = use('App/Models/Room') 
-        const room = Room.findBy('numero_sala', numero_sala)
+        
+        try {
+            const user = await this.User.findBy('matricula', matricula_aluno)
+            const Room = use('App/Models/Room') 
+            const room = await Room.findBy('numero_sala', numero_sala)
 
-        this.verificarProfessorSala(room, auth.user)
+            this.verificarProfessorSala(room, auth.user)
 
-        user.rooms().detach([room.id])
+            return user.rooms().detach([room.id])
+        }
+        catch(error) {
+            return { mensagem: error.message }
+        }
+        
     }
+
 
     verificarAutorizacao(user, usuarioAutenticado) {
         if(user.id != usuarioAutenticado.id) {
@@ -99,9 +187,41 @@ class UserController {
     }
 
     verificarProfessorSala(room, professor) {
-        if(room.professor_id == professor.id) {
+        if(room.professor_id != professor.id) {
             throw new Error("Acesso negado")
         }
+    }
+
+    verificarDisponibilidadeSala(room) {
+        if(room.disponibilidade == false) {
+            throw new Error("Esta sala não está aberta para alunos")
+        }
+    }
+
+    isProfessor(user) {
+        if(user.isProfessor == true) {
+            throw new Error("Matrícula de professor em operação que requere matrícula de aluno")
+        }
+    }
+
+    async verificarCapacidadeSala(room) {
+        const Database = use('Database')
+        
+        const countArray = await Database
+        .table('room_user')
+        .where('room_id', room.id)
+        .count()
+
+        const countAlunos = countArray[0]['count(*)']
+        
+        if(room.capacidade_alunos <= countAlunos) {
+            throw new Error("Esta sala esta cheia")
+        }
+    }
+
+    converterParaObjetoSimples(objeto) {
+        const conversor = JSON.stringify(objeto)
+        return JSON.parse(conversor)
     }
 }
 
