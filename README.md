@@ -15,8 +15,10 @@ Api que possibilita o gerenciamento de alunos, professores e salas
 7. Para iniciar a api rode "adonis serve --dev". A api já está funcionando
 8. Para testar a api abra o Insomnia e importe o arquivo "Insomnia_rotas_api_desafio" que está na pasta do projeto
 9. O nome do projeto no Insomnia é clicksoft_api_desafio e possui 13 rotas. Comece pela rota salvarUsuario
+
 *OBS: O formato da data deve ser MM/DD/AAAA*
 10. Após criar alguns usuários para teste, o passo seguinte é se autenticar. Na rota autenticarUsuario passe o email e a senha de algum usuário (professor ou aluno) para receber um token JWT que deverá ser usado para acessar as demais rotas.
+
 *OBS: Se o usuário for um aluno ele terá acesso as seguintes rotas com seu token JWT: deletarUsuario, buscarUsuario, editarUsuario, buscarAlunoSalas.
 Se for professor poderá acessar todas as rotas com exceção da buscarAlunoSalas.*
 11. Para acessar as outras rotas deve-se copiar o token JWT recebido e colar no campo "token" da aba "Bearer" da rota desejada
